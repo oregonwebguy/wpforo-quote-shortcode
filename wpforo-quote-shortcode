@@ -1,0 +1,41 @@
+<?php
+//////////////////////////////////////////////////////////////////////////
+// wpForo Quotes: Display legacy forum quotes from wpForo via shortcode //
+//////////////////////////////////////////////////////////////////////////
+
+add_filter( 'bbp_get_topic_content', 'wbcom_render_forum_quote', 10, 2 );
+add_filter( 'bbp_get_reply_content', 'wbcom_render_forum_quote', 10, 2 );
+function wbcom_render_forum_quote( $content, $id ) {
+	 $content = preg_replace_callback( '#\[quote(\s[^\[\]]+|\s?)?]#iu', function( $m ) {
+	        $userid    = 0;
+	        $postid    = 0;
+	        $mention   = '';
+	        $posted_by = '';
+            if( preg_match( '#data-userid=[\'"](\d+)[\'"]#iu', $m[1], $u ) ) $userid = $u[1];
+	        if( preg_match( '#data-postid=[\'"](\d+)[\'"]#iu', $m[1], $p ) ) $postid = $p[1];
+
+            if( $userid ){
+            	$user = get_user_by( 'id', $user_id );
+	            $posted_by = $mention = trim( (string) $user->user_nicename );
+            }
+
+	        return sprintf(
+                '<blockquote data-userid="%1$d" data-postid="%2$d" data-mention="%3$s"><div class="wpforo-post-quote-head">%4$s</div>',
+                $userid,
+                $postid,
+                $mention,
+		        ( $posted_by ? sprintf('<div class="wpforo-post-quote-author"><strong> Posted by: %1$s </strong></div>', $posted_by ) : '' )
+		       
+            );
+        }, (string) $content );
+		$patterns = array();
+		$replacements = array();
+		$patterns[0] = '#\[/quote]#iu';
+		$patterns[1] = '#\?Ã¿#';
+		$replacements[0] = '</blockquote>';
+		$replacements[1] = '&nbsp;';
+		
+        return preg_replace( $patterns, $replacements, (string) $content );
+
+}
+?>
